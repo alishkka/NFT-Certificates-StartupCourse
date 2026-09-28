@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useEffect, useMemo, useState } from "react";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { create, createCollection, fetchAssetV1, fetchCollectionV1, mplCore } from "@metaplex-foundation/mpl-core";
@@ -10,8 +12,8 @@ import type { IrysUploader } from "@metaplex-foundation/umi-uploader-irys";
 import { Connection, PublicKey, Transaction, VersionedTransaction, clusterApiUrl } from "@solana/web3.js";
 import { createSolanaClient, type SolanaClient } from "@metamask/connect-solana";
 import { Buffer } from "buffer";
-import { sha256, sha384 } from "@noble/hashes/sha2.js";
 import { BadgeCheck, CheckCircle2, Copy, ExternalLink, FileBadge2, LoaderCircle, Search, ShieldCheck, Wallet } from "lucide-react";
+import { installBrowserIrysHash, installBrowserIrysSigner, normalizeBytes } from "@/lib/irys-browser";
 
 const RPC_URL = clusterApiUrl("devnet");
 const METAMASK_DEVNET_SCOPE = "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1" as const;
@@ -89,45 +91,6 @@ const validUploadUri = (value:unknown): value is string =>
   /^https:\/\/[^/]+\/.+/.test(value) &&
   !/\/(?:undefined|null)$/.test(value);
 
-function normalizeBytes(value:unknown,label:string):Uint8Array {
-  if(value instanceof Uint8Array)return Uint8Array.from(value);
-  if(ArrayBuffer.isView(value))return Uint8Array.from(new Uint8Array(value.buffer,value.byteOffset,value.byteLength));
-  if(value instanceof ArrayBuffer)return new Uint8Array(value.slice(0));
-  if(Array.isArray(value))return Uint8Array.from(value);
-  throw new Error(`${label}: кошелёк вернул подпись в неподдерживаемом формате`);
-}
-
-function installBrowserIrysHash(irys:unknown) {
-  type CryptoDriver={hash:(data:unknown,algorithm?:string)=>Promise<Uint8Array>;__nftStartHashPatched?:boolean};
-  type IrysWithBundles={bundles:{getCryptoDriver:()=>CryptoDriver}};
-  const driver=(irys as IrysWithBundles).bundles.getCryptoDriver();
-  if(driver.__nftStartHashPatched)return;
-  driver.hash=async(data,algorithm="SHA-256")=>{
-    const bytes=normalizeBytes(data,"Irys hash");
-    const normalized=algorithm.toUpperCase().replace(/-/g,"");
-    if(normalized==="SHA256")return sha256(bytes);
-    if(normalized==="SHA384")return sha384(bytes);
-    throw new Error(`Irys запросил неподдерживаемый алгоритм хеширования: ${algorithm}`);
-  };
-  driver.__nftStartHashPatched=true;
-}
-
-function installBrowserIrysSigner(irys:unknown) {
-  type IrysSigner={sign:(message:Uint8Array)=>Promise<unknown>;__nftStartSignerPatched?:boolean};
-  type IrysWithSigner={getSigner:()=>IrysSigner};
-  const signer=(irys as IrysWithSigner).getSigner();
-  if(signer.__nftStartSignerPatched)return;
-  const originalSign=signer.sign.bind(signer);
-  signer.sign=async(message)=>{
-    const result=await originalSign(message);
-    const signature=result&&typeof result==="object"&&"signature" in result
-      ? (result as {signature:unknown}).signature
-      : result;
-    return normalizeBytes(signature,"Irys signature");
-  };
-  signer.__nftStartSignerPatched=true;
-}
-
 async function uploadPermanentFile(uploader:IrysUploader,file:GenericFile) {
   const amount=await uploader.getUploadPrice([file]);
   await uploader.fund(amount,false);
@@ -159,6 +122,8 @@ export default function Home() {
   const [form,setForm]=useState({recipientName:"",certificateNumber:"",issueDate:new Date().toISOString().slice(0,10),program:"Технологическое предпринимательство и стартапы",recipient:""});
   const connection=useMemo(()=>new Connection(RPC_URL,"confirmed"),[]);
 
+  // The verifier intentionally runs once for a certificate deep-link present at initial load.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(()=>{const timer=window.setTimeout(()=>{setCollection(localStorage.getItem(COLLECTION_KEY)??"");try{const stored:unknown=JSON.parse(localStorage.getItem(CERTIFICATES_KEY)??"[]");setRecords(Array.isArray(stored)?stored:[])}catch{setRecords([])}const certificate=new URLSearchParams(window.location.search).get("certificate");if(certificate){setVerifyAddress(certificate);setMode("verify");void verifyCertificate(certificate)}},0);return()=>window.clearTimeout(timer)},[]);
   useEffect(()=>{const context=(document as Document&{modelContext?:WebMcpContext}).modelContext;if(!context?.registerTool)return;const lifecycle=new AbortController();void Promise.resolve(context.registerTool({name:"prepare_certificate_issue",title:"Подготовить выпуск сертификата",description:"Заполняет видимую форму выпуска NFT-сертификата. Транзакция не отправляется: администратор должен проверить данные и подтвердить выпуск в подключённом кошельке.",inputSchema:{type:"object",properties:{recipientName:{type:"string"},certificateNumber:{type:"string"},issueDate:{type:"string"},program:{type:"string"},recipient:{type:"string"}},required:["recipientName","certificateNumber","issueDate","program","recipient"],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute(input){const value=input as Record<string,string>;if(!value.recipientName||!value.certificateNumber||!value.issueDate||!value.program||!value.recipient)throw new Error("Все поля обязательны");setForm({recipientName:value.recipientName,certificateNumber:value.certificateNumber,issueDate:value.issueDate,program:value.program,recipient:value.recipient});setMode("issue");return{status:"prepared",requiresAdminConfirmation:true}}},{signal:lifecycle.signal}));return()=>lifecycle.abort()},[]);
   async function refreshBalance(address:string){const lamports=await connection.getBalance(new PublicKey(address));setBalance(lamports/1_000_000_000)}
