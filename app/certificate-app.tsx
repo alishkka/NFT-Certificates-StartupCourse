@@ -9,7 +9,6 @@ import { irysUploader } from "@metaplex-foundation/umi-uploader-irys/web";
 import type { IrysUploader } from "@metaplex-foundation/umi-uploader-irys";
 import { Connection, PublicKey, Transaction, VersionedTransaction, clusterApiUrl } from "@solana/web3.js";
 import { createSolanaClient, type SolanaClient } from "@metamask/connect-solana";
-import { Buffer } from "buffer";
 import { BadgeCheck, CheckCircle2, Copy, ExternalLink, FileBadge2, LoaderCircle, Search, ShieldCheck, Wallet } from "lucide-react";
 
 const RPC_URL = clusterApiUrl("devnet");
@@ -79,16 +78,14 @@ async function makeCertificatePng(data:{recipientName:string;certificateNumber:s
 const validUploadUri = (value:string) => /^https:\/\/[^/]+\/.+/.test(value);
 
 async function uploadPermanentFile(uploader:IrysUploader,file:GenericFile) {
-  const amount=await uploader.getUploadPrice([file]);
-  await uploader.fund(amount,false);
   const irys=await uploader.irys();
-  const tags=file.contentType?[{name:"Content-Type",value:file.contentType},...file.tags]:file.tags;
-  const transaction=irys.createTransaction(Buffer.from(file.buffer),{tags});
-  await transaction.sign();
-  const id=transaction.id;
-  const response=await irys.uploader.uploadTransaction(transaction);
-  if(response.status>=300||!id)throw new Error(`Постоянное хранилище отклонило загрузку (${response.status})`);
-  return `https://gateway.irys.xyz/${id}`;
+  type UploadResponse={status:number;id?:string;data?:{id?:string;tx_id?:string;data?:{id?:string}}};
+  type UploadTransport={uploadTransaction:(transaction:unknown)=>Promise<UploadResponse>};
+  const transport=irys.uploader as unknown as UploadTransport;
+  const originalUpload=transport.uploadTransaction.bind(transport);
+  let capturedId="";
+  transport.uploadTransaction=async(transaction)=>{const response=await originalUpload(transaction);capturedId=response.data?.id||response.id||response.data?.tx_id||response.data?.data?.id||"";return{...response,data:{...response.data,id:capturedId}}};
+  try{const [uri]=await uploader.upload([file]);if(validUploadUri(uri))return uri;if(capturedId)return `https://gateway.irys.xyz/${capturedId}`;throw new Error("Постоянное хранилище не вернуло адрес загруженного файла")}finally{transport.uploadTransaction=originalUpload}
 }
 
 const getPhantom = () => typeof window === "undefined" ? undefined : window.phantom?.solana;
