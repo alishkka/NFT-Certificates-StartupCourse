@@ -1,5 +1,6 @@
 import vinext from "vinext";
 import { defineConfig } from "vite";
+import { fileURLToPath, URL } from "node:url";
 import hostingConfig from "./.openai/hosting.json";
 import { readExecutionProfile } from "./scripts/execution-profile.mjs";
 import { sites } from "./build/sites-vite-plugin";
@@ -51,6 +52,28 @@ export default defineConfig(async () => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
+    resolve: {
+      alias: [
+        {
+          find: /^buffer$/,
+          replacement: fileURLToPath(new URL("./node_modules/buffer/index.js", import.meta.url)),
+        },
+        {
+          find: /^crypto$/,
+          replacement: fileURLToPath(new URL("./lib/browser-crypto.ts", import.meta.url)),
+        },
+        {
+          find: /^stream$/,
+          replacement: fileURLToPath(
+            new URL("./node_modules/readable-stream/readable-browser.js", import.meta.url),
+          ),
+        },
+        {
+          find: /^util$/,
+          replacement: fileURLToPath(new URL("./node_modules/util/util.js", import.meta.url)),
+        },
+      ],
+    },
     server: {
       ...(managedLinux ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] } : {}),
       ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
