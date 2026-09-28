@@ -10,6 +10,7 @@ import type { IrysUploader } from "@metaplex-foundation/umi-uploader-irys";
 import { Connection, PublicKey, Transaction, VersionedTransaction, clusterApiUrl } from "@solana/web3.js";
 import { createSolanaClient, type SolanaClient } from "@metamask/connect-solana";
 import { Buffer } from "buffer";
+import { sha256, sha384 } from "@noble/hashes/sha2.js";
 import { BadgeCheck, CheckCircle2, Copy, ExternalLink, FileBadge2, LoaderCircle, Search, ShieldCheck, Wallet } from "lucide-react";
 
 const RPC_URL = clusterApiUrl("devnet");
@@ -81,10 +82,31 @@ const validUploadUri = (value:unknown): value is string =>
   /^https:\/\/[^/]+\/.+/.test(value) &&
   !/\/(?:undefined|null)$/.test(value);
 
+function installBrowserIrysHash(irys:unknown) {
+  type CryptoDriver={hash:(data:unknown,algorithm?:string)=>Promise<Uint8Array>;__nftStartHashPatched?:boolean};
+  type IrysWithBundles={bundles:{getCryptoDriver:()=>CryptoDriver}};
+  const driver=(irys as IrysWithBundles).bundles.getCryptoDriver();
+  if(driver.__nftStartHashPatched)return;
+  driver.hash=async(data,algorithm="SHA-256")=>{
+    const view=ArrayBuffer.isView(data)
+      ? new Uint8Array(data.buffer,data.byteOffset,data.byteLength)
+      : data instanceof ArrayBuffer
+        ? new Uint8Array(data)
+        : Uint8Array.from(data as ArrayLike<number>);
+    const bytes=Uint8Array.from(view);
+    const normalized=algorithm.toUpperCase().replace(/-/g,"");
+    if(normalized==="SHA256")return sha256(bytes);
+    if(normalized==="SHA384")return sha384(bytes);
+    throw new Error(`Irys запросил неподдерживаемый алгоритм хеширования: ${algorithm}`);
+  };
+  driver.__nftStartHashPatched=true;
+}
+
 async function uploadPermanentFile(uploader:IrysUploader,file:GenericFile) {
   const amount=await uploader.getUploadPrice([file]);
   await uploader.fund(amount,false);
   const irys=await uploader.irys();
+  installBrowserIrysHash(irys);
   const tags=file.contentType?[{name:"Content-Type",value:file.contentType},...file.tags]:file.tags;
   const transaction=irys.createTransaction(Buffer.from(file.buffer),{tags});
   await transaction.sign();
