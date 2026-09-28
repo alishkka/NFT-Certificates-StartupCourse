@@ -84,7 +84,7 @@ async function uploadPermanentFile(uploader:IrysUploader,file:GenericFile) {
   const transport=irys.uploader as unknown as UploadTransport;
   const originalUpload=transport.uploadTransaction.bind(transport);
   let capturedId="";
-  transport.uploadTransaction=async(transaction)=>{const response=await originalUpload(transaction);capturedId=response.data?.id||response.id||response.data?.tx_id||response.data?.data?.id||"";return{...response,data:{...response.data,id:capturedId}}};
+  transport.uploadTransaction=async(transaction)=>{const response=await originalUpload(transaction);const signedTransactionId=(transaction as {id?:string}).id;capturedId=response.data?.id||response.id||response.data?.tx_id||response.data?.data?.id||signedTransactionId||"";return{...response,data:{...response.data,id:capturedId}}};
   try{const [uri]=await uploader.upload([file]);if(validUploadUri(uri))return uri;if(capturedId)return `https://gateway.irys.xyz/${capturedId}`;throw new Error("Постоянное хранилище не вернуло адрес загруженного файла")}finally{transport.uploadTransaction=originalUpload}
 }
 
