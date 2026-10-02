@@ -22,6 +22,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # Match the npm version that generated the lockfile (optional peer resolution).
+      - run: npm install --global npm@11.12.1
       - run: npm ci
       - run: npm test
       - run: npx vite build --config vite.pages.config.ts
