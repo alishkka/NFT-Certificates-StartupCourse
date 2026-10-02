@@ -52,6 +52,10 @@ export default defineConfig(async () => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
+    // Safe default for shared deployments. Admin mode requires a separate build.
+    define: {
+      "process.env.NEXT_PUBLIC_DEMO_MODE": JSON.stringify(process.env.NFTSTART_DEMO_MODE !== "admin" ? "true" : "false"),
+    },
     resolve: {
       alias: [
         {

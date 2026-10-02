@@ -7,7 +7,7 @@ const CertificateApp = dynamic(() => import("./certificate-app"), {
   loading: () => (
     <main className="loading-screen">
       <span className="loading-mark" />
-      <p>Загружаем Solana Certificate Console…</p>
+      <p>Loading NFT Certificates…</p>
     </main>
   ),
 });
