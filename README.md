@@ -2,7 +2,7 @@
 
 > Educational certificates with a publicly verifiable record on Solana.
 
-[Video Demo · 3 min](docs/NFT-Certificates-Demo-3min.mp4) · [Judge Guide](docs/JUDGE-GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [Existing NFT](https://explorer.solana.com/address/FxRV2Y2fbJzfeMcQgGHjd8SwLoXX2xfHAvudrqofxufQ?cluster=devnet)
+[Live Demo](https://nft-certificates-startupcourse.vercel.app/) · [Presentation](https://canva.link/fi4o90opx2lcwoj) · [Pitch Video](https://youtu.be/NKXJ4DrLMzY) · [Video Demo · 3 min](docs/NFT-Certificates-Demo-3min.mp4) · [Judge Guide](docs/JUDGE-GUIDE.md)
 
 ![NFT Certificates public demo](docs/assets/demo.png)
 
@@ -13,6 +13,8 @@ NFT Certificates is a Solana Devnet MVP for course organizers, accelerators and 
 | Team member | Role | Contact |
 | --- | --- | --- |
 | Alinur | Project creator and developer | [GitHub @alishkka](https://github.com/alishkka) |
+
+Team captain and submission contact: [@thenotoriouskentik on Telegram](https://t.me/thenotoriouskentik).
 
 Development assistance: OpenAI Codex and ChatGPT. Generic UI components and hosting utilities remain from the starter template.
 
@@ -30,7 +32,7 @@ The blockchain record alone does not establish a person's identity, course compl
 
 The judging deployment is **read-only**. Visitors can edit the preview and verify the existing NFT. Certificate issuance and management are administrator functions and are disabled in the public build. Visitors cannot mint, revoke or modify existing certificates.
 
-The Vercel build configuration is included in this repository. The production link will be added after deployment completes.
+**Live application:** https://nft-certificates-startupcourse.vercel.app/
 
 ### Try it in one minute
 
@@ -158,13 +160,16 @@ See the [full roadmap](docs/ROADMAP.md). Organizer subscriptions and per-certifi
 
 ## Resources
 
+- [Live application on Vercel](https://nft-certificates-startupcourse.vercel.app/)
+- [Project presentation](https://canva.link/fi4o90opx2lcwoj)
+- [Pitch video](https://youtu.be/NKXJ4DrLMzY)
 - [Three-minute English demo](docs/NFT-Certificates-Demo-3min.mp4)
 - [Judge testing guide](docs/JUDGE-GUIDE.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Contributing](CONTRIBUTING.md)
 
-The video includes actual UI captures and a live lookup. Uploading, wallet signing and new issuance appear as explicitly labelled process diagrams. Presentation and pitch-video links have not yet been supplied for this repository.
+The demo video includes actual UI captures and a live lookup. Uploading, wallet signing and new issuance appear as explicitly labelled process diagrams.
 
 ## Repository structure
 
