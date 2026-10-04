@@ -1,0 +1,14 @@
+node_modules
+.git
+.wrangler
+.sites-runtime
+.agents
+.codex
+submission
+demo-video
+dist
+dist-pages
+dist-vercel
+docs/*.mp4
+*.tsbuildinfo
+.env*

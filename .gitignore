@@ -38,6 +38,7 @@ yarn-error.log*
 next-env.d.ts
 /dist/
 /dist-pages/
+/dist-vercel/
 /.wrangler/
 # Checkout-local execution profile and tool state; never publish them.
 /.sites-runtime/

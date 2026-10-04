@@ -1,73 +1,134 @@
 # NFT Certificates
 
-An educational certificate prototype on **Solana Devnet** for course organizers, accelerators and graduates.
+> Educational certificates with a publicly verifiable record on Solana.
 
-[Try the demo](https://alishkka.github.io/NFT-Certificates-StartupCourse/) · [Existing NFT](https://explorer.solana.com/address/FxRV2Y2fbJzfeMcQgGHjd8SwLoXX2xfHAvudrqofxufQ?cluster=devnet) · [Source](https://github.com/alishkka/NFT-Certificates-StartupCourse)
+[Video Demo · 3 min](docs/NFT-Certificates-Demo-3min.mp4) · [Judge Guide](docs/JUDGE-GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [Existing NFT](https://explorer.solana.com/address/FxRV2Y2fbJzfeMcQgGHjd8SwLoXX2xfHAvudrqofxufQ?cluster=devnet)
 
-![NFT Certificates interface](docs/assets/demo.png)
+![NFT Certificates public demo](docs/assets/demo.png)
 
-## What it does
+## Colosseum submission
 
-A PDF alone does not establish who issued it. NFT Certificates links a certificate to a Solana asset with an owner and collection that a verifier can inspect independently.
+NFT Certificates is a Solana Devnet MVP for course organizers, accelerators and graduates. This repository contains the application, administrator issuance workflow, public verification interface, tests and demo video.
 
-The public deployment is an **interactive, read-only demo**. Visitors can edit sample form fields, see a preview and verify an existing NFT through a live Devnet lookup. Wallet connection, minting, airdrops and revocation are disabled. Form edits are not saved.
+| Team member | Role | Contact |
+| --- | --- | --- |
+| Alinur | Project creator and developer | [GitHub @alishkka](https://github.com/alishkka) |
 
-**This is a Devnet MVP, not a production credential authority.** An NFT proves a chain record and ownership, not identity, academic achievement or institutional accreditation.
+Development assistance: OpenAI Codex and ChatGPT. Generic UI components and hosting utilities remain from the starter template.
 
-## Try it in one minute
+## Problem and solution
 
-1. Open the demo. No wallet or real SOL is required.
-2. Edit the name, date or program and watch the preview.
-3. Scroll to **Existing certificates**.
-4. Click **Verify** on certificate #1.
-5. Inspect its owner and collection, then open Solana Explorer.
+**Certificate provenance.** A PDF can display a name and logo without proving who issued it. The prototype associates a certificate with a Metaplex Core asset, its owner and its collection.
 
-Only the confirmed example is listed. Failed mint attempts are not shown as issued certificates.
+**Manual verification.** Reviewers may need to contact the organizer to confirm a document. The verifier reads the asset from Solana Devnet and provides an independent Explorer link.
 
-## Submission materials
+**Sharing a credential.** A graduate can share the NFT address so a reviewer can inspect the same public record. Connecting a wallet is not required for verification.
 
-- [Three-minute demo, 16:9 MP4](docs/NFT-Certificates-Demo-3min.mp4)
-- [Architecture and limitations](docs/ARCHITECTURE.md)
-- [Judge testing guide](docs/JUDGE-GUIDE.md)
+The blockchain record alone does not establish a person's identity, course completion or institutional accreditation. Issuer onboarding remains planned work.
 
-The video includes actual UI recordings and a live lookup of an existing NFT. Wallet signing and new issuance are labelled process diagrams, not a claimed successful new mint. Its narration-free music is originally synthesized.
+## Public demo
 
-## Stack
+The judging deployment is **read-only**. Visitors can edit the preview and verify the existing NFT. Certificate issuance and management are administrator functions and are disabled in the public build. Visitors cannot mint, revoke or modify existing certificates.
 
-React 19, TypeScript, Vinext/Vite, Tailwind CSS, Solana Web3.js, Metaplex Core/Umi, Irys, MetaMask Solana Connect, Phantom and GitHub Pages for the public demo. The original server build uses Cloudflare Workers via Sites. Development assistance: OpenAI Codex and ChatGPT.
+The Vercel build configuration is included in this repository. The production link will be added after deployment completes.
 
-No custom Solana program is deployed by this prototype.
+### Try it in one minute
 
-## Local development
+1. Open the public demo, then edit the recipient name, date or program.
+2. Check the live certificate preview.
+3. Scroll to **Existing certificates** and click **Verify** on certificate #1.
+4. Inspect its owner and collection, then open Solana Explorer.
 
-Requirements: Node.js **22.13+**, npm and network access for live verification.
+Only a confirmed existing asset appears in the demo. Form edits do not create certificates.
 
-```bash
-npm ci
+## Why Solana
+
+- **Metaplex Core:** the application uses an existing asset standard for ownership, collection membership and plugins.
+- **Public verification:** the client reads the asset through Solana RPC, and reviewers can cross-check it in Explorer.
+- **Wallet integration:** administrator code integrates MetaMask Solana Connect and Phantom for signing.
+- **Devnet:** the MVP uses test SOL while issuance and storage integrations are evaluated.
+
+No custom Solana program is deployed by this project.
+
+## Summary of features
+
+| Feature | Current status |
+| --- | --- |
+| English certificate form and live preview | Available in public demo |
+| Existing NFT owner and collection lookup | Live Solana Devnet read |
+| Independent verification | Solana Explorer link |
+| Administrator wallet integration | Implemented in separate local admin mode |
+| PNG/JSON upload and Core minting | Implemented; fresh end-to-end wallet validation pending |
+| Transfer restriction | Mint code uses Core PermanentFreezeDelegate |
+| Revocation | Local browser flag only; no on-chain revocation |
+| Verified issuer registry | Planned |
+
+## Tech stack
+
+| Layer | Technology |
+| --- | --- |
+| Interface | React 19, TypeScript, Tailwind CSS |
+| Public demo | Vite static build, Vercel configuration |
+| Local administrator app | Vinext/Vite |
+| Solana client | Solana Web3.js, Metaplex Core, Umi |
+| Storage integration | Irys |
+| Wallets | MetaMask Solana Connect, Phantom |
+| Testing | Node.js test runner; browser verification |
+| AI development tools | OpenAI Codex, ChatGPT |
+
+## Architecture
+
+```mermaid
+flowchart LR
+  Reviewer["Reviewer"] --> Demo["Public demo"]
+  Demo --> RPC["Solana Devnet RPC"]
+  RPC --> Asset["Existing Core asset"]
+  Demo --> Explorer["Solana Explorer"]
+  Admin["Administrator"] --> Local["Separate local admin app"]
+  Local --> Wallet["Wallet signature"]
+  Local --> Irys["Irys: PNG and JSON"]
+  Wallet --> Mint["Metaplex Core mint"]
+  Mint --> Asset
+```
+
+The public build disables write actions at build time. A client flag is not an issuer authentication system; on-chain updates still require the relevant signing authority. See [architecture and trust boundaries](docs/ARCHITECTURE.md).
+
+## Quick start
+
+Requirements: Node.js **22.13+**, **npm 11.12.1** and network access for Devnet reads.
+
+```sh
+git clone https://github.com/alishkka/NFT-Certificates-StartupCourse.git
+cd NFT-Certificates-StartupCourse
+npx --yes npm@11.12.1 ci
 npm run dev
 ```
 
-Open `http://localhost:5173/`. Clean clones default to read-only demo mode. No API key or private key is needed.
+Open `http://localhost:5173/`. The default local session is a read-only demo. No API key, private key or environment file is required.
 
-```bash
+### Run checks
+
+```sh
 npm test
 npm run lint
-npm run build
+npx vite build --config vite.vercel.config.ts
 ```
 
-The build targets Cloudflare Workers through Vinext. `npm start` runs the built Worker locally; use its printed URL. The public demo is a separate static build on GitHub Pages: `npx vite build --config vite.pages.config.ts`. Its read-only mode is fixed in the build configuration.
+The four regression tests cover browser byte handling, hashing and signer adaptation. They do not prove that a live upload or mint succeeds.
 
-### Separate local administrator session
+### Separate administrator session
 
-```bash
+```sh
 NFTSTART_DEMO_MODE=admin npm run dev
 ```
 
-Restart the dev server when changing modes. This is a build-time setting, not a query parameter or localStorage switch. **Do not deploy an administrator build as the public judging demo.**
+Restart the server when switching modes. Connect the issuer wallet, acquire Devnet SOL, fill out a certificate and review wallet prompts. The collection update authority must match the issuer. The public Vercel configuration always builds read-only mode, regardless of this local variable.
 
-Administrator mode contains the issuance implementation: connect a wallet, acquire Devnet SOL, enter a recipient's Solana address, generate PNG, upload image/JSON through Irys, and sign the Core transaction. The collection update authority must match the connected issuer. Confirm requests yourself; never enter a seed phrase into the app.
+### Deploy on Vercel
 
-The latest upload/signing path still needs a fresh end-to-end wallet test. Four regression tests cover browser bytes, hashing and signer adaptation; they do not establish successful live uploading or minting.
+Import this GitHub repository into Vercel. The included `vercel.json` selects the Vite preset, npm version, static build command and `dist-vercel` output directory. No secrets are required for the public demo.
+
+The original `npm run build` targets the earlier Cloudflare/Vinext setup. Use the Vercel-specific command above for this deployment.
 
 ## Existing on-chain example
 
@@ -80,32 +141,50 @@ The latest upload/signing path still needs a fresh end-to-end wallet test. Four 
 | Explorer name | KBTU Certificate #1 |
 | Issued | 26 September 2026 |
 
-Read from Devnet and inspected in Explorer on 2 October 2026. Devnet may reset. This original NFT has no usable metadata URI, so a wallet may not show an image.
+Inspected on Devnet on 2 October 2026. This legacy asset has no usable metadata URI, so a wallet may not display its image. Devnet can reset.
 
-## Limitations and trust
+## Roadmap
 
-- Administrator mode is a development workflow, not an authenticated multi-tenant service.
-- The demo pins a known collection. A verified issuer registry and institutional authorization process are not implemented.
-- Administrator history and **Отозвать** (Revoke) use localStorage, not on-chain revocation. Public demo mode ignores local history and hides revocation.
-- Minting uses the Core `PermanentFreezeDelegate` plugin to restrict transfer. This does not establish identity or permanent irrevocability.
-- PNG/JSON availability depends on the storage provider. No archival retention guarantee is claimed for this Devnet setup.
-- Third-party wallet NFT rendering, especially in Devnet, is not guaranteed. Use the verifier and Explorer.
-- Public names and metadata require informed consent. Avoid real student records in casual tests.
-- The supplied KBTU/Startup-Course artwork is prototype material. No institutional partnership or permission for reuse elsewhere is claimed.
+- [x] English interactive certificate preview
+- [x] Public verification of an existing Devnet asset
+- [x] Read-only judging demo and three-minute English video
+- [ ] Validate a fresh wallet-to-storage-to-mint run
+- [ ] Add issuer onboarding and indexed issuance history
+- [ ] Implement independently verifiable revocation
+- [ ] Test supported wallet rendering
+- [ ] Run a course-provider pilot before evaluating mainnet
 
-## Structure
+See the [full roadmap](docs/ROADMAP.md). Organizer subscriptions and per-certificate pricing are business hypotheses; demand and pricing have not been validated.
+
+## Resources
+
+- [Three-minute English demo](docs/NFT-Certificates-Demo-3min.mp4)
+- [Judge testing guide](docs/JUDGE-GUIDE.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Contributing](CONTRIBUTING.md)
+
+The video includes actual UI captures and a live lookup. Uploading, wallet signing and new issuance appear as explicitly labelled process diagrams. Presentation and pitch-video links have not yet been supplied for this repository.
+
+## Repository structure
 
 ```text
-app/certificate-app.tsx   Form, wallets, issuance and verification
-app/globals.css           Brand and responsive preview
-lib/demo-data.ts          Confirmed public Devnet example
-lib/irys-browser.ts       Browser hash/signature compatibility
-lib/browser-crypto.ts     Browser crypto compatibility
-public/                  Certificate artwork
-tests/                   Regression tests
-docs/                    Presentation, demo and judge guide
+app/                     Application, certificate workflow and styles
+lib/                     Demo asset data and browser compatibility helpers
+pages/main.tsx           Static demo entry point
+public/                  Certificate artwork and favicon
+tests/                   Browser/signing regression tests
+docs/                    Video, screenshots, architecture and judge guide
+vite.vercel.config.ts    Vercel static build configuration
+vercel.json              Vercel install/build/output settings
 ```
 
-## Next steps
+## Limitations and attribution
 
-Validate a fresh wallet-to-storage-to-mint run, implement issuer onboarding and on-chain revocation, replace local history with indexed records, and test wallet compatibility before mainnet. Proposed business model: organizer subscriptions with usage-based issuance. Demand and pricing have not yet been validated.
+This is a Devnet prototype. Admin history and revocation flags use localStorage. An issuer registry, production authentication and archival storage guarantees are not implemented. Wallet NFT rendering is not guaranteed. Obtain consent before publishing personal certificate data.
+
+The supplied KBTU/Startup-Course artwork is prototype material. No institutional partnership or permission for unrelated reuse is claimed. Existing NFT data remains unchanged.
+
+## License
+
+No project-wide open-source license has been selected. Third-party dependencies, starter code and supplied artwork retain their respective licenses and rights.
